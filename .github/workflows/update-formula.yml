@@ -1,0 +1,143 @@
+name: Update Formula
+
+on:
+  repository_dispatch:
+    types: [formula-update]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to update to (leave empty to fetch latest)"
+        required: false
+        type: string
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ -n "${{ github.event.client_payload.version }}" ]]; then
+            VERSION="${{ github.event.client_payload.version }}"
+          elif [[ -n "${{ inputs.version }}" ]]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION=$(curl -s https://api.github.com/repos/rafaeltonholo/svg-to-compose/releases/latest | jq -r '.tag_name')
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: $VERSION"
+
+      - name: Check if update is needed
+        id: check
+        run: |
+          CURRENT=$(grep -oP 'releases/download/\K[^/]+' Formula/s2c.rb | head -1)
+          NEW="${{ steps.version.outputs.version }}"
+          echo "Current: $CURRENT, New: $NEW"
+          if [[ "$CURRENT" == "$NEW" ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download binaries and compute SHA256
+        if: steps.check.outputs.skip == 'false'
+        id: hashes
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          BASE_URL="https://github.com/rafaeltonholo/svg-to-compose/releases/download/${VERSION}"
+
+          for platform in macosArm64 macosX64 linuxX64; do
+            FILE="s2c-${platform}-binaries.zip"
+            curl -sL -o "$FILE" "${BASE_URL}/${FILE}"
+            HASH=$(sha256sum "$FILE" | cut -d' ' -f1)
+            echo "${platform}_sha256=$HASH" >> "$GITHUB_OUTPUT"
+            echo "$platform: $HASH"
+          done
+
+      - name: Update formula
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          cat > Formula/s2c.rb << 'RUBY'
+          class S2c < Formula
+            desc "CLI tool to convert SVG/Android Vector Drawable to Jetpack Compose ImageVector"
+            homepage "https://www.svgtocompose.com"
+            license "MIT"
+
+            livecheck do
+              url :stable
+              regex(/(\d+(?:\.\d+)+)/i)
+            end
+
+            on_macos do
+              on_arm do
+                url "https://github.com/rafaeltonholo/svg-to-compose/releases/download/VERSION_PLACEHOLDER/s2c-macosArm64-binaries.zip"
+                sha256 "MACOS_ARM64_SHA256"
+              end
+
+              on_intel do
+                url "https://github.com/rafaeltonholo/svg-to-compose/releases/download/VERSION_PLACEHOLDER/s2c-macosX64-binaries.zip"
+                sha256 "MACOS_X64_SHA256"
+              end
+            end
+
+            on_linux do
+              on_intel do
+                url "https://github.com/rafaeltonholo/svg-to-compose/releases/download/VERSION_PLACEHOLDER/s2c-linuxX64-binaries.zip"
+                sha256 "LINUX_X64_SHA256"
+              end
+            end
+
+            def install
+              bin.install "s2c.kexe" => "s2c"
+            end
+
+            def caveats
+              <<~EOS
+                s2c is also available as a Gradle plugin for Android/KMP projects:
+                  plugins {
+                    id("dev.tonholo.s2c") version "#{version}"
+                  }
+
+                For more information, visit:
+                  https://github.com/rafaeltonholo/svg-to-compose
+              EOS
+            end
+
+            test do
+              assert_match version.to_s, shell_output("#{bin}/s2c --version")
+            end
+          end
+          RUBY
+
+          # Remove leading whitespace from heredoc
+          sed -i 's/^          //' Formula/s2c.rb
+
+          # Replace placeholders
+          sed -i "s/VERSION_PLACEHOLDER/${VERSION}/g" Formula/s2c.rb
+          sed -i "s/MACOS_ARM64_SHA256/${{ steps.hashes.outputs.macosArm64_sha256 }}/g" Formula/s2c.rb
+          sed -i "s/MACOS_X64_SHA256/${{ steps.hashes.outputs.macosX64_sha256 }}/g" Formula/s2c.rb
+          sed -i "s/LINUX_X64_SHA256/${{ steps.hashes.outputs.linuxX64_sha256 }}/g" Formula/s2c.rb
+
+      - name: Create Pull Request
+        if: steps.check.outputs.skip == 'false'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          title: "Update s2c to ${{ steps.version.outputs.version }}"
+          body: |
+            Automated formula update for s2c version `${{ steps.version.outputs.version }}`.
+
+            **SHA256 hashes:**
+            - macOS ARM64: `${{ steps.hashes.outputs.macosArm64_sha256 }}`
+            - macOS x64: `${{ steps.hashes.outputs.macosX64_sha256 }}`
+            - Linux x64: `${{ steps.hashes.outputs.linuxX64_sha256 }}`
+          branch: "update/s2c-${{ steps.version.outputs.version }}"
+          commit-message: "Update s2c to ${{ steps.version.outputs.version }}"
