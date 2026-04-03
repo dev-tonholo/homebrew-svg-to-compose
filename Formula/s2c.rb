@@ -10,20 +10,20 @@ class S2c < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/rafaeltonholo/svg-to-compose/releases/download/2.1.3/s2c-macosArm64-binaries.zip"
-      sha256 "23308664ee71abfa83c8f4a1faa2e63cd7db1c2d02ad1c894964d32470903667"
+      url "https://github.com/rafaeltonholo/svg-to-compose/releases/download/2.2.0/s2c-macosArm64-binaries.zip"
+      sha256 "521a50ebaf01429b4eb6d5e60eaa534ad560db4492af1f1821d7e03b3e474d4a"
     end
 
     on_intel do
-      url "https://github.com/rafaeltonholo/svg-to-compose/releases/download/2.1.3/s2c-macosX64-binaries.zip"
-      sha256 "b9112b9596703d3701128fff6c0e3a697525757b6bda317207af28da0ae1e855"
+      url "https://github.com/rafaeltonholo/svg-to-compose/releases/download/2.2.0/s2c-macosX64-binaries.zip"
+      sha256 "750e4f5bcd8ab0dce0670ef5a25f6814d4c6d54434e6ae4aa44871224b922a6d"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/rafaeltonholo/svg-to-compose/releases/download/2.1.3/s2c-linuxX64-binaries.zip"
-      sha256 "a1237eb8f85fcb649acfd566fe33b821d19073c04e53c5225d35ea18d9350ea1"
+      url "https://github.com/rafaeltonholo/svg-to-compose/releases/download/2.2.0/s2c-linuxX64-binaries.zip"
+      sha256 "77787acfff4ac5fe7a7f9d814e0e38c59794578f6ed41502c0552cddba2fc6db"
     end
   end
 
@@ -35,7 +35,7 @@ class S2c < Formula
     <<~EOS
       s2c is also available as a Gradle plugin for Android/KMP projects:
         plugins {
-          id("dev.tonholo.s2c") version "#{version}"
+id("dev.tonholo.s2c") version "#{version}"
         }
 
       For more information, visit:
