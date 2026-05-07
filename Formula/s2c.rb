@@ -10,20 +10,20 @@ class S2c < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/rafaeltonholo/svg-to-compose/releases/download/2.2.0/s2c-macosArm64-binaries.zip"
-      sha256 "521a50ebaf01429b4eb6d5e60eaa534ad560db4492af1f1821d7e03b3e474d4a"
+      url "https://github.com/rafaeltonholo/svg-to-compose/releases/download/2.2.1/s2c-macosArm64-binaries.zip"
+      sha256 "9448286708eee81178c5377f21198f71ec731db81dde902b2b6492874853a37a"
     end
 
     on_intel do
-      url "https://github.com/rafaeltonholo/svg-to-compose/releases/download/2.2.0/s2c-macosX64-binaries.zip"
-      sha256 "750e4f5bcd8ab0dce0670ef5a25f6814d4c6d54434e6ae4aa44871224b922a6d"
+      url "https://github.com/rafaeltonholo/svg-to-compose/releases/download/2.2.1/s2c-macosX64-binaries.zip"
+      sha256 "b7df9ea7d497a954aea6b72289507754054f5234daf367a5490cd29d301f3162"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/rafaeltonholo/svg-to-compose/releases/download/2.2.0/s2c-linuxX64-binaries.zip"
-      sha256 "77787acfff4ac5fe7a7f9d814e0e38c59794578f6ed41502c0552cddba2fc6db"
+      url "https://github.com/rafaeltonholo/svg-to-compose/releases/download/2.2.1/s2c-linuxX64-binaries.zip"
+      sha256 "6b6f4611a49c338cb12d454f91109e66dd6fb93830f5c44dea7ea272eb528db3"
     end
   end
 
